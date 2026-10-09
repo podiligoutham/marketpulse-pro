@@ -1,0 +1,31 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.jks
+*.keystore
+**/secrets/
+# Node
+node_modules/
+dist/
+coverage/
+.vite/
+# Java
+target/
+build/
+.gradle/
+*.class
+# IDE/OS
+.idea/
+.vscode/
+.DS_Store
+# Logs
+*.log
+logs/
+# Local infra
+*.tfstate
+*.tfstate.*
+.terraform/
