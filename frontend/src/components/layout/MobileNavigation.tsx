@@ -43,6 +43,7 @@ export function MobileNavigation({
             className='space-y-1'>
             {navigationItems.map((item) => (
               <NavLink
+                key={item.path}
                 to={item.path}
                 end
                 onClick={() => onOpenChange(false)}
