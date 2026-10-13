@@ -1,3 +1,4 @@
+import { MarketPerformanceChart } from "../components/dashboard/MarketPerformanceChart";
 import { StatCard } from "../components/dashboard/StatCard";
 
 const marketIndices = [
@@ -32,6 +33,8 @@ export function DashboardPage() {
           />
         ))}
       </div>
+
+      <MarketPerformanceChart />
     </section>
   );
 }
