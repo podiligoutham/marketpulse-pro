@@ -7,6 +7,7 @@ export function Sidebar() {
   return (
     <aside
       className='
+      sticky top-0 self-start
         hidden
         h-screen
         w-18

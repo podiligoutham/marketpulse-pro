@@ -1,5 +1,6 @@
 import { MarketPerformanceChart } from "../components/dashboard/MarketPerformanceChart";
 import { StatCard } from "../components/dashboard/StatCard";
+import { WatchlistPreview } from "../components/dashboard/WatchlistPreview";
 
 const marketIndices = [
   { id: "sp500", label: "S&P 500", value: "5,842.47", changePercent: 0.82 },
@@ -35,6 +36,7 @@ export function DashboardPage() {
       </div>
 
       <MarketPerformanceChart />
+      <WatchlistPreview />
     </section>
   );
 }
