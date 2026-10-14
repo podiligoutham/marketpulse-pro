@@ -95,17 +95,18 @@ export function MarketPerformanceChart() {
             <YAxis
               stroke='#94a3b8'
               width={55}
+              domain={["dataMin - 50", "dataMax + 50"]}
             />
 
             <Tooltip
-  content={({ active, payload, label }) => (
-    <MarketChartTooltip
-      active={active}
-      payload={payload}
-      label={label}
-    />
-  )}
-/>
+              content={({ active, payload, label }) => (
+                <MarketChartTooltip
+                  active={active}
+                  payload={payload}
+                  label={label}
+                />
+              )}
+            />
 
             <Line
               type='monotone'
