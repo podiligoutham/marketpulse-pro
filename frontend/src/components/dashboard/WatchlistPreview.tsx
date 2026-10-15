@@ -4,8 +4,10 @@ import { Search } from "lucide-react";
 import { useWatchlistFilters } from "../../hooks/useWatchlistFilters";
 import { WatchlistTable } from "../watchlist/WatchlistTable";
 import { WatchlistEmptyState } from "../watchlist/WatchlistEmptyState";
+import { useWatchlistQuery } from "../../hooks/useWatchlistQuery";
 
 export function WatchlistPreview() {
+  const { data: stocks = [] } = useWatchlistQuery();
   const {
     searchQuery,
     setSearchQuery,
@@ -13,7 +15,7 @@ export function WatchlistPreview() {
     sortDirection,
     handleSort,
     sortedStocks,
-  } = useWatchlistFilters(mockWatchlist);
+  } = useWatchlistFilters(stocks);
 
   return (
     <section className='min-w-0 rounded-xl border border-slate-700 bg-slate-800 p-5'>
@@ -80,7 +82,7 @@ export function WatchlistPreview() {
           onSort={handleSort}
         />
       ) : (
-        <WatchlistEmptyState/>
+        <WatchlistEmptyState />
       )}
     </section>
   );

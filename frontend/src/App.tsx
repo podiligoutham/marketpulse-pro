@@ -4,31 +4,39 @@ import { DashboardPage } from "./pages/Dashboardpage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { MarketsPage } from "./pages/MarketsPage";
 import { WatchlistPage } from "./pages/WatchlistPage";
+import { WatchlistProvider } from "./context/WatchlistProvider";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "./app/queryClient";
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route element={<AppLayout />}>
-          <Route
-            index
-            element={<DashboardPage />}
-          />
-          <Route
-            path='markets'
-            element={<MarketsPage />}
-          />
-          <Route
-            path='watchlist'
-            element={<WatchlistPage />}
-          />
-        </Route>
+    <QueryClientProvider client={queryClient}>
+      <WatchlistProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route element={<AppLayout />}>
+            <Route
+              index
+              element={<DashboardPage />}
+            />
+            <Route
+              path='markets'
+              element={<MarketsPage />}
+            />
+            <Route
+              path='watchlist'
+              element={<WatchlistPage />}
+            />
+          </Route>
 
-        <Route
-          path='*'
-          element={<NotFoundPage />}
-        />
-      </Routes>
-    </BrowserRouter>
+          <Route
+            path='*'
+            element={<NotFoundPage />}
+          />
+        </Routes>
+      </BrowserRouter>
+    </WatchlistProvider>
+    </QueryClientProvider>
+    
   );
 }

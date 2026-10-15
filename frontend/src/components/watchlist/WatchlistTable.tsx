@@ -1,14 +1,16 @@
 import { SortableTableHeader } from "../common/SortableTableHeader";
 import type { WatchlistStock } from "../../types/market";
 import type { SortKey, SortDirection } from "../../hooks/useWatchlistFilters";
-import { Trash2 } from "lucide-react";
+import { LoaderCircle, Trash2 } from "lucide-react";
 
 type WatchlistTableProps = {
   stocks: WatchlistStock[];
   sortKey: SortKey;
   sortDirection: SortDirection;
   onSort: (column: SortKey) => void;
-  handleRemove?: (stock: string) => void;
+  handleRemove?: (stock: string) => Promise<void>;
+  isRemoving?: boolean;
+  removingSymbol?: string;
 };
 
 const currencyFormatter = new Intl.NumberFormat("en-US", {
@@ -24,6 +26,8 @@ export function WatchlistTable({
   sortDirection,
   onSort,
   handleRemove,
+  isRemoving,
+  removingSymbol,
 }: WatchlistTableProps) {
   return (
     <div className='w-full overflow-x-auto'>
@@ -67,6 +71,8 @@ export function WatchlistTable({
           {stocks.map((stock) => {
             const isPositive = stock.changePercent > 0;
             const isNegative = stock.changePercent < 0;
+            const isRemovingThisStock =
+              isRemoving && removingSymbol === stock.symbol;
 
             const changeColor = isPositive
               ? "text-green-400"
@@ -108,13 +114,30 @@ export function WatchlistTable({
                   <td className='px-3 py-3 text-right'>
                     <button
                       type='button'
-                      onClick={() => handleRemove(stock.symbol)}
+                      disabled={isRemoving}
+                      onClick={() => handleRemove?.(stock.symbol)}
                       aria-label={`Remove ${stock.symbol} from watchlist`}
-                      className='rounded-lg p-2 text-slate-400 hover:bg-red-500/10 hover:text-red-400'>
-                      <Trash2
-                        size={17}
-                        aria-hidden='true'
-                      />
+                      className='
+    inline-flex items-center justify-center
+    rounded-lg p-2 text-slate-400
+    transition-colors
+    hover:bg-red-500/10
+    hover:text-red-400
+    disabled:cursor-not-allowed
+    disabled:opacity-50
+  '>
+                      {isRemovingThisStock ? (
+                        <LoaderCircle
+                          size={17}
+                          className='animate-spin'
+                          aria-hidden='true'
+                        />
+                      ) : (
+                        <Trash2
+                          size={17}
+                          aria-hidden='true'
+                        />
+                      )}
                     </button>
                   </td>
                 )}

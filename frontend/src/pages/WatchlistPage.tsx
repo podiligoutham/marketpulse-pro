@@ -1,45 +1,58 @@
-import { useState } from "react";
-import { mockWatchlist } from "../data/mockWatchlist";
-import type { WatchlistStock } from "../types/market";
 import { useWatchlistFilters } from "../hooks/useWatchlistFilters";
 import { AddStockForm } from "../components/watchlist/AddStockForm";
-import { mockStockCatalog } from "../data/mockStockCatalog";
+
 import { WatchlistTable } from "../components/watchlist/WatchlistTable";
 import { WatchlistEmptyState } from "../components/watchlist/WatchlistEmptyState";
-
-export type AddStockResult =
-  | { success: true }
-  | { success: false; error: string };
+import { useWatchlistQuery } from "../hooks/useWatchlistQuery";
+import { useAddWatchlistStock } from "../hooks/useAddWatchlistStock";
+import { useRemoveWatchlistStock } from "../hooks/useRemoveWatchlistStock";
+import type { AddStockResult } from "../types/watchlist";
+import { WatchlistLoadingState } from "../components/common/WatchlistLoadingState";
+import { WatchlistErrorState } from "../components/common/WatchlistErrorState";
 
 export function WatchlistPage() {
-  const [stocks, setStocks] = useState<WatchlistStock[]>(mockWatchlist);
+  const {
+    data: stocks = [],
+    isPending,
+    isError,
+    error,
+    isFetching,
+    refetch,
+  } = useWatchlistQuery();
 
+  const addMutation = useAddWatchlistStock();
+  const removeMutation = useRemoveWatchlistStock();
   const { sortKey, sortDirection, handleSort, sortedStocks } =
     useWatchlistFilters(stocks);
 
-  function handleAddStock(stock: string): AddStockResult {
-    const newStock = mockStockCatalog.find((s) => s.symbol === stock);
-    if (!newStock) {
+  async function handleAddStock(symbol: string): Promise<AddStockResult> {
+    try {
+      await addMutation.mutateAsync(symbol);
+      return { success: true };
+    } catch (error) {
       return {
         success: false,
-        error: `${stock} was not found in our stock catalog`,
+        error: error instanceof Error ? error.message : "Unable to add stock.",
       };
     }
-    const stockExists = mockStockCatalog.find((s) => s.symbol === stock);
-    if (stockExists) {
-      return {
-        success: false,
-        error: `${stock} is already in your watchlist.`,
-      };
-    }
-    setStocks([...stocks, newStock]);
-    return {
-      success: true,
-    };
   }
 
-  function handleRemoveStock(stock: string) {
-    setStocks(stocks.filter((s) => stock !== s.symbol));
+  async function handleRemoveStock(stock: string): Promise<void> {
+    await removeMutation.mutateAsync(stock);
+  }
+
+  if (isPending) {
+    return <WatchlistLoadingState />;
+  }
+
+  if (isError) {
+    return (
+      <WatchlistErrorState
+        message={error.message}
+        onRetry={() => void refetch()}
+        isRetrying={isFetching}
+      />
+    );
   }
 
   return (
@@ -62,7 +75,10 @@ export function WatchlistPage() {
         </div>
       </div>
 
-      <AddStockForm onAddStock={handleAddStock} />
+      <AddStockForm
+        onAddStock={handleAddStock}
+        isPending={addMutation.isPending}
+      />
 
       <section className='rounded-xl border border-slate-700 bg-slate-800 p-5'>
         <div className='mb-5'>
@@ -80,6 +96,8 @@ export function WatchlistPage() {
             sortDirection={sortDirection}
             onSort={handleSort}
             handleRemove={handleRemoveStock}
+            isRemoving={removeMutation.isPending}
+            removingSymbol={removeMutation.variables}
           />
         ) : (
           <WatchlistEmptyState />
