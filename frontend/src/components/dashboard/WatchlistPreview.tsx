@@ -2,14 +2,8 @@ import { Link } from "react-router";
 import { mockWatchlist } from "../../data/mockWatchlist";
 import { Search } from "lucide-react";
 import { useWatchlistFilters } from "../../hooks/useWatchlistFilters";
-import { SortableTableHeader } from "../common/SortableTableHeader";
-
-const currencyFormatter = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-});
+import { WatchlistTable } from "../watchlist/WatchlistTable";
+import { WatchlistEmptyState } from "../watchlist/WatchlistEmptyState";
 
 export function WatchlistPreview() {
   const {
@@ -79,91 +73,14 @@ export function WatchlistPreview() {
       </div>
 
       {sortedStocks.length > 0 ? (
-        <div className='w-full overflow-x-auto'>
-          <table className='w-full min-w-105 text-left text-sm'>
-            <thead className='border-b border-slate-700 text-slate-400'>
-              <tr>
-                <SortableTableHeader
-                  label='Symbol'
-                  column='symbol'
-                  sortKey={sortKey}
-                  sortDirection={sortDirection}
-                  onSort={handleSort}
-                />
-                <SortableTableHeader
-                  label='Price'
-                  column='price'
-                  sortKey={sortKey}
-                  sortDirection={sortDirection}
-                  onSort={handleSort}
-                  align='right'
-                />
-                <SortableTableHeader
-                  label='Change'
-                  column='changePercent'
-                  sortKey={sortKey}
-                  sortDirection={sortDirection}
-                  onSort={handleSort}
-                  align='right'
-                />
-              </tr>
-            </thead>
-
-            <tbody>
-              {sortedStocks.map((stock) => {
-                const isPositive = stock.changePercent > 0;
-                const isNegative = stock.changePercent < 0;
-
-                const changeColor = isPositive
-                  ? "text-green-400"
-                  : isNegative
-                    ? "text-red-400"
-                    : "text-slate-400";
-
-                const formattedChange = `${
-                  isPositive ? "+" : ""
-                }${stock.changePercent.toFixed(2)}%`;
-
-                return (
-                  <tr
-                    key={stock.symbol}
-                    className='border-b border-slate-700/60 last:border-b-0 hover:bg-slate-700/30'>
-                    <th
-                      scope='row'
-                      className='px-3 py-3 text-left font-normal'>
-                      <div className='flex flex-col gap-1'>
-                        <span className='font-semibold text-white'>
-                          {stock.symbol}
-                        </span>
-                        <span className='text-xs text-slate-400'>
-                          {stock.companyName}
-                        </span>
-                      </div>
-                    </th>
-
-                    <td className='px-3 py-3 text-right tabular-nums text-white'>
-                      {currencyFormatter.format(stock.price)}
-                    </td>
-
-                    <td
-                      className={`px-3 py-3 text-right font-medium tabular-nums ${changeColor}`}>
-                      {formattedChange}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        <WatchlistTable
+          stocks={sortedStocks}
+          sortKey={sortKey}
+          sortDirection={sortDirection}
+          onSort={handleSort}
+        />
       ) : (
-        <div className='py-8 text-center'>
-          <p className='text-sm font-medium text-white'>
-            No matching stocks found
-          </p>
-          <p className='mt-1 text-sm text-slate-400'>
-            Try searching for a different symbol or company.
-          </p>
-        </div>
+        <WatchlistEmptyState/>
       )}
     </section>
   );

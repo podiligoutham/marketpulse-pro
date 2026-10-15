@@ -1,15 +1,11 @@
 import { useState } from "react";
-import type { ReactNode } from "react";
 import { Header } from "../components/layout/Header";
 import { MobileNavigation } from "../components/layout/MobileNavigation";
 import { Sidebar } from "../components/layout/Sidebar";
+import { Outlet } from "react-router";
 
 
-type AppLayoutProps = {
-  children: ReactNode;
-};
-
-export function AppLayout({ children }: AppLayoutProps) {
+export function AppLayout() {
   const [isMobileNavOpen, setMobileNavOpen] = useState(false);
 
   return (
@@ -24,7 +20,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           onOpenChange={setMobileNavOpen}
         />
 
-        <main className="p-4 md:p-6">{children}</main>
+        <main className="p-4 md:p-6"><Outlet/></main>
       </div>
     </div>
   );

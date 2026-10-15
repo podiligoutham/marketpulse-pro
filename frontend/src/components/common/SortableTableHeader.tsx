@@ -24,6 +24,8 @@ export function SortableTableHeader({
     : sortDirection === "asc"
       ? ArrowUp
       : ArrowDown;
+  const alignmentClass = align === "right" ? "text-right" : "text-left";
+  const buttonAlignmentClass = align === "right" ? "ml-auto" : "";
   return (
     <th
       scope='col'
@@ -34,11 +36,11 @@ export function SortableTableHeader({
             : "descending"
           : "none"
       }
-      className={`px-3 py-3 text-${align} font-medium`}>
+      className={`px-3 py-3 ${alignmentClass} font-medium`}>
       <button
         type='button'
         onClick={() => onSort(column)}
-        className='inline-flex items-center gap-1 rounded text-slate-400 hover:text-white focus-visible:outline-2 focus-visible:outline-sky-400'>
+        className={`inline-flex items-center gap-1 rounded text-slate-400 hover:text-white focus-visible:outline-2 focus-visible:outline-sky-400 ${buttonAlignmentClass}`}>
         {label}
         <SortIcon
           size={14}
