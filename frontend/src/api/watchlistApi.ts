@@ -1,47 +1,59 @@
-import { mockWatchlist } from "../data/mockWatchlist";
-import { mockStockCatalog } from "../data/mockStockCatalog";
-import type { WatchlistStock } from "../types/market";
+const BASE_URL = "/api/v1/watchlist/stocks";
 
-let serverWatchlist: WatchlistStock[] = [...mockWatchlist];
+export interface WatchlistStock {
+  id: number;
+  symbol: string;
+  companyName: string;
+  createdAt: string;
+}
 
-function simulateLatency() {
-  return new Promise<void>((resolve) => {
-    setTimeout(resolve, 500);
-  });
+export interface AddWatchlistStockRequest {
+  symbol: string;
+  companyName: string;
+}
+
+async function handleResponse<T>(response: Response): Promise<T> {
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => null);
+
+    throw new Error(
+      errorBody?.message ?? `Request failed with status ${response.status}`,
+    );
+  }
+
+  return response.json() as Promise<T>;
 }
 
 export async function fetchWatchlist(): Promise<WatchlistStock[]> {
-  console.log("fetch called");
-  await simulateLatency();
-  return [...serverWatchlist];
+  const response = await fetch(BASE_URL);
+
+  return handleResponse<WatchlistStock[]>(response);
 }
 
 export async function addWatchlistStock(
-  symbol: string,
+  request: AddWatchlistStockRequest,
 ): Promise<WatchlistStock> {
-  await simulateLatency();
+  const response = await fetch(BASE_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(request),
+  });
 
-  const normalizedSymbol = symbol.trim().toUpperCase();
-
-  const stock = mockStockCatalog.find(
-    (item) => item.symbol === normalizedSymbol,
-  );
-
-  if (!stock) {
-    throw new Error(`${normalizedSymbol} was not found.`);
-  }
-
-  if (serverWatchlist.some((item) => item.symbol === normalizedSymbol)) {
-    throw new Error(`${normalizedSymbol} is already in your watchlist.`);
-  }
-
-  serverWatchlist = [...serverWatchlist, stock];
-
-  return stock;
+  return handleResponse<WatchlistStock>(response);
 }
 
 export async function removeWatchlistStock(symbol: string): Promise<void> {
-  await simulateLatency();
+  const response = await fetch(`${BASE_URL}/${encodeURIComponent(symbol)}`, {
+    method: "DELETE",
+  });
 
-  serverWatchlist = serverWatchlist.filter((item) => item.symbol !== symbol);
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => null);
+
+    throw new Error(
+      errorBody?.message ?? `Failed to remove stock: ${response.status}`,
+    );
+  }
 }
