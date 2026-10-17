@@ -1,4 +1,10 @@
 package com.marketpulse.watchlist.dto;
 
-public class ApiErrorResponse {
+import java.time.Instant;
+
+public record ApiErrorResponse(
+    int status,
+    String error,
+    String message,
+    Instant timestamp) {
 }

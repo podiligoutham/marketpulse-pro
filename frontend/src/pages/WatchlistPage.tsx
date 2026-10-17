@@ -1,12 +1,13 @@
+import { useState } from "react";
 import { useWatchlistFilters } from "../hooks/useWatchlistFilters";
 import { AddStockForm } from "../components/watchlist/AddStockForm";
-
 import { WatchlistTable } from "../components/watchlist/WatchlistTable";
 import { WatchlistEmptyState } from "../components/watchlist/WatchlistEmptyState";
 import { useWatchlistQuery } from "../hooks/useWatchlistQuery";
 import { useAddWatchlistStock } from "../hooks/useAddWatchlistStock";
 import { useRemoveWatchlistStock } from "../hooks/useRemoveWatchlistStock";
 import type { AddStockResult } from "../types/watchlist";
+import type { StockSearchResult } from "../api/stockSearchApi";
 import { WatchlistLoadingState } from "../components/common/WatchlistLoadingState";
 import { WatchlistErrorState } from "../components/common/WatchlistErrorState";
 
@@ -22,12 +23,21 @@ export function WatchlistPage() {
 
   const addMutation = useAddWatchlistStock();
   const removeMutation = useRemoveWatchlistStock();
+
+  const [removeError, setRemoveError] = useState("");
+
   const { sortKey, sortDirection, handleSort, sortedStocks } =
     useWatchlistFilters(stocks);
 
-  async function handleAddStock(symbol: string): Promise<AddStockResult> {
+  async function handleAddStock(
+    stock: StockSearchResult,
+  ): Promise<AddStockResult> {
     try {
-      await addMutation.mutateAsync(symbol);
+      await addMutation.mutateAsync({
+        symbol: stock.symbol,
+        companyName: stock.companyName,
+      });
+
       return { success: true };
     } catch (error) {
       return {
@@ -37,8 +47,16 @@ export function WatchlistPage() {
     }
   }
 
-  async function handleRemoveStock(stock: string): Promise<void> {
-    await removeMutation.mutateAsync(stock);
+  async function handleRemoveStock(symbol: string): Promise<void> {
+    setRemoveError("");
+
+    try {
+      await removeMutation.mutateAsync(symbol);
+    } catch (error) {
+      setRemoveError(
+        error instanceof Error ? error.message : "Unable to remove stock.",
+      );
+    }
   }
 
   if (isPending) {
@@ -85,9 +103,18 @@ export function WatchlistPage() {
           <h2 className='text-lg font-semibold text-white'>Your Stocks</h2>
 
           <p className='mt-1 text-sm text-slate-400'>
-            Your watchlist holdings and price movements.
+            Saved watchlist symbols. Live prices will be added in a later
+            milestone.
           </p>
         </div>
+
+        {removeError && (
+          <p
+            role='alert'
+            className='mb-4 text-sm text-red-400'>
+            {removeError}
+          </p>
+        )}
 
         {sortedStocks.length > 0 ? (
           <WatchlistTable

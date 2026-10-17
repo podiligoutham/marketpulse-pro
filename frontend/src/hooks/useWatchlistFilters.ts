@@ -1,7 +1,7 @@
 import { useState } from "react";
-import type { WatchlistStock } from "../types/market";
+import type { WatchlistStock } from "../api/watchlistApi";
 
-export type SortKey = "symbol" | "price" | "changePercent";
+export type SortKey = "symbol" | "companyName" | "createdAt";
 export type SortDirection = "asc" | "desc";
 
 export function useWatchlistFilters(stocks: WatchlistStock[]) {
@@ -11,32 +11,28 @@ export function useWatchlistFilters(stocks: WatchlistStock[]) {
 
   const normalizedQuery = searchQuery.trim().toLowerCase();
 
-  const filteredStocks = stocks.filter((stock) => {
-    const matchesSymbol = stock.symbol.toLowerCase().includes(normalizedQuery);
-
-    const matchesCompany = stock.companyName
-      .toLowerCase()
-      .includes(normalizedQuery);
-
-    return matchesSymbol || matchesCompany;
-  });
+  const filteredStocks = stocks.filter(
+    (stock) =>
+      stock.symbol.toLowerCase().includes(normalizedQuery) ||
+      stock.companyName.toLowerCase().includes(normalizedQuery),
+  );
 
   const sortedStocks = [...filteredStocks].sort((a, b) => {
-    let comparison;
-    if (sortKey === "symbol") {
-      comparison = a.symbol.localeCompare(b.symbol);
-    } else if (sortKey === "price") {
-      comparison = a.price - b.price;
-    } else {
-      comparison = a.changePercent - b.changePercent;
-    }
+    const comparison =
+      sortKey === "symbol"
+        ? a.symbol.localeCompare(b.symbol)
+        : sortKey === "companyName"
+          ? a.companyName.localeCompare(b.companyName)
+          : a.createdAt.localeCompare(b.createdAt);
 
     return sortDirection === "asc" ? comparison : -comparison;
   });
 
   function handleSort(column: SortKey) {
     if (sortKey === column) {
-      setSortDirection((previous) => (previous === "asc" ? "desc" : "asc"));
+      setSortDirection((previous) =>
+        previous === "asc" ? "desc" : "asc",
+      );
     } else {
       setSortKey(column);
       setSortDirection("asc");

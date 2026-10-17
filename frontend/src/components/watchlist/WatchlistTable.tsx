@@ -1,24 +1,18 @@
-import { SortableTableHeader } from "../common/SortableTableHeader";
-import type { WatchlistStock } from "../../types/market";
-import type { SortKey, SortDirection } from "../../hooks/useWatchlistFilters";
 import { LoaderCircle, Trash2 } from "lucide-react";
+import { SortableTableHeader } from "../common/SortableTableHeader";
+import type { WatchlistStock } from "../../api/watchlistApi";
+import type { SortKey, SortDirection } from "../../hooks/useWatchlistFilters";
+import { useMarketStore } from "../../store/useMarketStore";
 
 type WatchlistTableProps = {
   stocks: WatchlistStock[];
   sortKey: SortKey;
   sortDirection: SortDirection;
   onSort: (column: SortKey) => void;
-  handleRemove?: (stock: string) => Promise<void>;
+  handleRemove?: (symbol: string) => Promise<void>;
   isRemoving?: boolean;
   removingSymbol?: string;
 };
-
-const currencyFormatter = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-});
 
 export function WatchlistTable({
   stocks,
@@ -29,6 +23,9 @@ export function WatchlistTable({
   isRemoving,
   removingSymbol,
 }: WatchlistTableProps) {
+  const selectedSymbol = useMarketStore((state) => state.selectedSymbol);
+
+  const selectStock = useMarketStore((state) => state.selectStock);
   return (
     <div className='w-full overflow-x-auto'>
       <table className='w-full min-w-105 text-left text-sm'>
@@ -41,22 +38,23 @@ export function WatchlistTable({
               sortDirection={sortDirection}
               onSort={onSort}
             />
+
             <SortableTableHeader
-              label='Price'
-              column='price'
+              label='Company'
+              column='companyName'
               sortKey={sortKey}
               sortDirection={sortDirection}
               onSort={onSort}
-              align='right'
             />
+
             <SortableTableHeader
-              label='Change'
-              column='changePercent'
+              label='Added'
+              column='createdAt'
               sortKey={sortKey}
               sortDirection={sortDirection}
               onSort={onSort}
-              align='right'
             />
+
             {handleRemove && (
               <th
                 scope='col'
@@ -69,20 +67,7 @@ export function WatchlistTable({
 
         <tbody>
           {stocks.map((stock) => {
-            const isPositive = stock.changePercent > 0;
-            const isNegative = stock.changePercent < 0;
-            const isRemovingThisStock =
-              isRemoving && removingSymbol === stock.symbol;
-
-            const changeColor = isPositive
-              ? "text-green-400"
-              : isNegative
-                ? "text-red-400"
-                : "text-slate-400";
-
-            const formattedChange = `${
-              isPositive ? "+" : ""
-            }${stock.changePercent.toFixed(2)}%`;
+            const removing = isRemoving && removingSymbol === stock.symbol;
 
             return (
               <tr
@@ -90,24 +75,28 @@ export function WatchlistTable({
                 className='border-b border-slate-700/60 last:border-b-0 hover:bg-slate-700/30'>
                 <th
                   scope='row'
-                  className='px-3 py-3 text-left font-normal'>
-                  <div className='flex flex-col gap-1'>
-                    <span className='font-semibold text-white'>
-                      {stock.symbol}
-                    </span>
-                    <span className='text-xs text-slate-400'>
-                      {stock.companyName}
-                    </span>
-                  </div>
+                  className='px-3 py-3 text-left'>
+                  <button
+                    type='button'
+                    onClick={() => selectStock(stock.symbol)}
+                    aria-pressed={selectedSymbol === stock.symbol}
+                    className={`rounded px-2 py-1 font-semibold transition-colors ${
+                      selectedSymbol === stock.symbol
+                        ? "bg-sky-500/20 text-sky-300"
+                        : "text-white hover:text-sky-400"
+                    }`}>
+                    {stock.symbol}
+                  </button>
                 </th>
 
-                <td className='px-3 py-3 text-right tabular-nums text-white'>
-                  {currencyFormatter.format(stock.price)}
+                <td className='px-3 py-3 text-slate-300'>
+                  {stock.companyName}
                 </td>
 
-                <td
-                  className={`px-3 py-3 text-right font-medium tabular-nums ${changeColor}`}>
-                  {formattedChange}
+                <td className='px-3 py-3 text-slate-300'>
+                  {stock.createdAt
+                    ? new Date(stock.createdAt).toLocaleDateString()
+                    : "—"}
                 </td>
 
                 {handleRemove && (
@@ -115,18 +104,10 @@ export function WatchlistTable({
                     <button
                       type='button'
                       disabled={isRemoving}
-                      onClick={() => handleRemove?.(stock.symbol)}
+                      onClick={() => void handleRemove(stock.symbol)}
                       aria-label={`Remove ${stock.symbol} from watchlist`}
-                      className='
-    inline-flex items-center justify-center
-    rounded-lg p-2 text-slate-400
-    transition-colors
-    hover:bg-red-500/10
-    hover:text-red-400
-    disabled:cursor-not-allowed
-    disabled:opacity-50
-  '>
-                      {isRemovingThisStock ? (
+                      className='inline-flex items-center justify-center rounded-lg p-2 text-slate-400 hover:bg-red-500/10 hover:text-red-400 disabled:cursor-not-allowed disabled:opacity-50'>
+                      {removing ? (
                         <LoaderCircle
                           size={17}
                           className='animate-spin'

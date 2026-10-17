@@ -1,4 +1,8 @@
 package com.marketpulse.watchlist.exception;
 
-public class StockNotFoundException {
+public class StockNotFoundException extends RuntimeException {
+
+  public StockNotFoundException(String symbol) {
+    super("Stock not found: " + symbol);
+  }
 }

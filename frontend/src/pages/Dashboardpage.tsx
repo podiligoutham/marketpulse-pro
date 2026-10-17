@@ -1,5 +1,7 @@
 import { MarketPerformanceChart } from "../components/dashboard/MarketPerformanceChart";
+import { SelectedStockCard } from "../components/dashboard/SelectedStockCard";
 import { StatCard } from "../components/dashboard/StatCard";
+import { StockQuoteCard } from "../components/dashboard/StockQuoteCard";
 import { WatchlistPreview } from "../components/dashboard/WatchlistPreview";
 
 const marketIndices = [
@@ -37,6 +39,8 @@ export function DashboardPage() {
 
       <MarketPerformanceChart />
       <WatchlistPreview />
+      <SelectedStockCard />
+      <StockQuoteCard />
     </section>
   );
 }

@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { removeWatchlistStock } from "../api/watchlistApi";
-import type { WatchlistStock } from "../types/market";
+import type { WatchlistStock } from "../api/watchlistApi";
 
 const WATCHLIST_QUERY_KEY = ["watchlist"] as const;
 
