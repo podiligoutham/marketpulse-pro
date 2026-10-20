@@ -1,15 +1,20 @@
 import { useState } from "react";
+
 import { useWatchlistFilters } from "../hooks/useWatchlistFilters";
-import { AddStockForm } from "../components/watchlist/AddStockForm";
-import { WatchlistTable } from "../components/watchlist/WatchlistTable";
-import { WatchlistEmptyState } from "../components/watchlist/WatchlistEmptyState";
 import { useWatchlistQuery } from "../hooks/useWatchlistQuery";
 import { useAddWatchlistStock } from "../hooks/useAddWatchlistStock";
 import { useRemoveWatchlistStock } from "../hooks/useRemoveWatchlistStock";
-import type { AddStockResult } from "../types/watchlist";
-import type { StockSearchResult } from "../api/stockSearchApi";
+
+import { AddStockForm } from "../components/watchlist/AddStockForm";
+import { WatchlistTable } from "../components/watchlist/WatchlistTable";
+import { WatchlistEmptyState } from "../components/watchlist/WatchlistEmptyState";
 import { WatchlistLoadingState } from "../components/common/WatchlistLoadingState";
 import { WatchlistErrorState } from "../components/common/WatchlistErrorState";
+
+import { useLiveQuoteStore } from "../store/useLiveQuoteStore";
+
+import type { AddStockResult } from "../types/watchlist";
+import type { StockSearchResult } from "../api/stockSearchApi";
 
 export function WatchlistPage() {
   const {
@@ -28,6 +33,17 @@ export function WatchlistPage() {
 
   const { sortKey, sortDirection, handleSort, sortedStocks } =
     useWatchlistFilters(stocks);
+
+  // Shared live quotes from the application-level SSE provider.
+  const liveQuotes = useLiveQuoteStore((state) => state.quotes);
+  const streamStatus = useLiveQuoteStore((state) => state.status);
+  const streamError = useLiveQuoteStore((state) => state.error);
+
+  const symbolCount = new Set(
+    stocks.map((stock) => stock.symbol.trim().toUpperCase()).filter(Boolean),
+  ).size;
+
+  const canStream = symbolCount > 0 && symbolCount <= 5;
 
   async function handleAddStock(
     stock: StockSearchResult,
@@ -99,14 +115,57 @@ export function WatchlistPage() {
       />
 
       <section className='rounded-xl border border-slate-700 bg-slate-800 p-5'>
-        <div className='mb-5'>
-          <h2 className='text-lg font-semibold text-white'>Your Stocks</h2>
+        <div className='mb-5 flex flex-wrap items-center justify-between gap-3'>
+          <div>
+            <h2 className='text-lg font-semibold text-white'>Your Stocks</h2>
 
-          <p className='mt-1 text-sm text-slate-400'>
-            Saved watchlist symbols. Live prices will be added in a later
-            milestone.
-          </p>
+            <p className='mt-1 text-sm text-slate-400'>
+              Your saved stocks and latest available prices.
+            </p>
+          </div>
+
+          {canStream && (
+            <div
+              role='status'
+              className='flex items-center gap-2 text-xs text-slate-300'>
+              <span
+                aria-hidden='true'
+                className={`h-2 w-2 rounded-full ${
+                  streamStatus === "connected"
+                    ? "bg-green-400"
+                    : streamStatus === "disconnected"
+                      ? "bg-red-400"
+                      : "bg-amber-400"
+                }`}
+              />
+
+              <span>
+                {streamStatus === "connected"
+                  ? "Live connected"
+                  : streamStatus === "connecting"
+                    ? "Connecting..."
+                    : streamStatus === "reconnecting"
+                      ? "Reconnecting..."
+                      : "Disconnected"}
+              </span>
+            </div>
+          )}
         </div>
+
+        {canStream && streamError && (
+          <p
+            role='status'
+            className='mb-4 text-sm text-amber-400'>
+            {streamError}
+          </p>
+        )}
+
+        {symbolCount > 5 && (
+          <p className='mb-4 text-sm text-amber-400'>
+            Live streaming currently supports up to 5 stocks. Your saved
+            watchlist remains available.
+          </p>
+        )}
 
         {removeError && (
           <p
@@ -125,6 +184,7 @@ export function WatchlistPage() {
             handleRemove={handleRemoveStock}
             isRemoving={removeMutation.isPending}
             removingSymbol={removeMutation.variables}
+            liveQuotes={canStream ? liveQuotes : {}}
           />
         ) : (
           <WatchlistEmptyState />
