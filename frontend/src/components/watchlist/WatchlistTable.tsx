@@ -2,6 +2,7 @@ import { LoaderCircle, Trash2 } from "lucide-react";
 import { SortableTableHeader } from "../common/SortableTableHeader";
 import type { WatchlistStock } from "../../api/watchlistApi";
 import type { SortKey, SortDirection } from "../../hooks/useWatchlistFilters";
+import type { StockQuote } from "../../features/stocks/types/stockQuote";
 import { useMarketStore } from "../../store/useMarketStore";
 
 type WatchlistTableProps = {
@@ -12,6 +13,7 @@ type WatchlistTableProps = {
   handleRemove?: (symbol: string) => Promise<void>;
   isRemoving?: boolean;
   removingSymbol?: string;
+  liveQuotes?: Record<string, StockQuote>;
 };
 
 export function WatchlistTable({
@@ -22,13 +24,14 @@ export function WatchlistTable({
   handleRemove,
   isRemoving,
   removingSymbol,
+  liveQuotes = {},
 }: WatchlistTableProps) {
   const selectedSymbol = useMarketStore((state) => state.selectedSymbol);
-
   const selectStock = useMarketStore((state) => state.selectStock);
+
   return (
     <div className='w-full overflow-x-auto'>
-      <table className='w-full min-w-105 text-left text-sm'>
+      <table className='w-full min-w-160 text-left text-sm'>
         <thead className='border-b border-slate-700 text-slate-400'>
           <tr>
             <SortableTableHeader
@@ -46,6 +49,18 @@ export function WatchlistTable({
               sortDirection={sortDirection}
               onSort={onSort}
             />
+
+            <th
+              scope='col'
+              className='px-3 py-3 text-right font-medium'>
+              Live Price
+            </th>
+
+            <th
+              scope='col'
+              className='px-3 py-3 text-right font-medium'>
+              Change %
+            </th>
 
             <SortableTableHeader
               label='Added'
@@ -68,6 +83,10 @@ export function WatchlistTable({
         <tbody>
           {stocks.map((stock) => {
             const removing = isRemoving && removingSymbol === stock.symbol;
+            const quote = liveQuotes[stock.symbol];
+
+            const price = quote?.currentPrice;
+            const changePercent = quote?.changePercent;
 
             return (
               <tr
@@ -91,6 +110,33 @@ export function WatchlistTable({
 
                 <td className='px-3 py-3 text-slate-300'>
                   {stock.companyName}
+                </td>
+
+                <td className='px-3 py-3 text-right font-medium text-white tabular-nums'>
+                  {typeof price === "number"
+                    ? price.toLocaleString("en-US", {
+                        style: "currency",
+                        currency: "USD",
+                      })
+                    : "—"}
+                </td>
+
+                <td className='px-3 py-3 text-right tabular-nums'>
+                  {typeof changePercent === "number" ? (
+                    <span
+                      className={
+                        changePercent > 0
+                          ? "text-green-400"
+                          : changePercent < 0
+                            ? "text-red-400"
+                            : "text-slate-300"
+                      }>
+                      {changePercent > 0 ? "+" : ""}
+                      {changePercent.toFixed(2)}%
+                    </span>
+                  ) : (
+                    <span className='text-slate-500'>—</span>
+                  )}
                 </td>
 
                 <td className='px-3 py-3 text-slate-300'>

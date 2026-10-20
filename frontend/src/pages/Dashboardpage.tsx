@@ -1,8 +1,8 @@
 import { MarketPerformanceChart } from "../components/dashboard/MarketPerformanceChart";
 import { SelectedStockCard } from "../components/dashboard/SelectedStockCard";
 import { StatCard } from "../components/dashboard/StatCard";
-import { StockQuoteCard } from "../components/dashboard/StockQuoteCard";
 import { WatchlistPreview } from "../components/dashboard/WatchlistPreview";
+import { StockQuoteCard } from "../features/stocks/components/StockQuoteCard";
 
 const marketIndices = [
   { id: "sp500", label: "S&P 500", value: "5,842.47", changePercent: 0.82 },
@@ -37,10 +37,15 @@ export function DashboardPage() {
         ))}
       </div>
 
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <StockQuoteCard symbol="NVDA" />
+        <StockQuoteCard symbol="AAPL" />
+        <StockQuoteCard symbol="MSFT" />
+      </div>
+
       <MarketPerformanceChart />
       <WatchlistPreview />
       <SelectedStockCard />
-      <StockQuoteCard />
     </section>
   );
 }
