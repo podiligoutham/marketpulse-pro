@@ -26,9 +26,7 @@ public class FinnhubClient {
     this.webClient = webClient;
   }
 
-  public Mono<FinnhubSearchResponse> searchStocks(
-      String query
-  ) {
+  public Mono<FinnhubSearchResponse> searchStocks(String query) {
     return webClient
         .get()
         .uri(uriBuilder -> uriBuilder
@@ -38,24 +36,40 @@ public class FinnhubClient {
             .build()
         )
         .retrieve()
+
+        // Handle Finnhub rate limiting (HTTP 429)
         .onStatus(
             status -> status.value() == 429,
             response -> Mono.error(
-                new IllegalStateException(
-                    "Finnhub rate limit exceeded"
+                new FinnhubRateLimitException(
+                    "Finnhub search rate limit exceeded"
                 )
             )
         )
+
+        // Handle other HTTP errors (4xx and 5xx)
         .onStatus(
             HttpStatusCode::isError,
             response -> Mono.error(
-                new IllegalStateException(
-                    "Finnhub request failed: "
+                new MarketDataProviderException(
+                    "Finnhub search failed with status "
                         + response.statusCode().value()
                 )
             )
         )
+
         .bodyToMono(FinnhubSearchResponse.class)
+
+        // Handle network-level failures
+        .onErrorMap(
+            WebClientRequestException.class,
+            error -> new MarketDataProviderException(
+                "Unable to connect to Finnhub search",
+                error
+            )
+        )
+
+        // Logging
         .doOnSubscribe(subscription ->
             log.debug("Searching Finnhub stocks query={}", query)
         )

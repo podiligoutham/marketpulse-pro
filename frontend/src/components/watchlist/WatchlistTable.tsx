@@ -1,9 +1,15 @@
 import { LoaderCircle, Trash2 } from "lucide-react";
+
 import { SortableTableHeader } from "../common/SortableTableHeader";
+
 import type { WatchlistStock } from "../../api/watchlistApi";
 import type { SortKey, SortDirection } from "../../hooks/useWatchlistFilters";
-import type { StockQuote } from "../../features/stocks/types/stockQuote";
+import type { StockQuote } from "../../api/stockQuoteApi";
+
 import { useMarketStore } from "../../store/useMarketStore";
+import { useLiveQuoteStore } from "../../store/useLiveQuoteStore";
+import { useCurrentTime } from "../../hooks/useCurrentTime";
+import { getQuoteFreshness } from "../../utils/quoteFreshness";
 
 type WatchlistTableProps = {
   stocks: WatchlistStock[];
@@ -16,6 +22,18 @@ type WatchlistTableProps = {
   liveQuotes?: Record<string, StockQuote>;
 };
 
+const freshnessStyles = {
+  fresh: "text-green-400",
+  stale: "text-amber-400",
+  unavailable: "text-slate-500",
+} as const;
+
+const freshnessLabels = {
+  fresh: "Fresh",
+  stale: "Stale",
+  unavailable: "Unavailable",
+} as const;
+
 export function WatchlistTable({
   stocks,
   sortKey,
@@ -27,7 +45,12 @@ export function WatchlistTable({
   liveQuotes = {},
 }: WatchlistTableProps) {
   const selectedSymbol = useMarketStore((state) => state.selectedSymbol);
+
   const selectStock = useMarketStore((state) => state.selectStock);
+
+  const updatedAt = useLiveQuoteStore((state) => state.updatedAt);
+
+  const now = useCurrentTime();
 
   return (
     <div className='w-full overflow-x-auto'>
@@ -83,10 +106,15 @@ export function WatchlistTable({
         <tbody>
           {stocks.map((stock) => {
             const removing = isRemoving && removingSymbol === stock.symbol;
-            const quote = liveQuotes[stock.symbol];
 
+            const quote = liveQuotes[stock.symbol];
             const price = quote?.currentPrice;
             const changePercent = quote?.changePercent;
+
+            const freshness = getQuoteFreshness(
+              quote ? updatedAt[stock.symbol] : undefined,
+              now,
+            );
 
             return (
               <tr
@@ -112,13 +140,21 @@ export function WatchlistTable({
                   {stock.companyName}
                 </td>
 
-                <td className='px-3 py-3 text-right font-medium text-white tabular-nums'>
-                  {typeof price === "number"
-                    ? price.toLocaleString("en-US", {
-                        style: "currency",
-                        currency: "USD",
-                      })
-                    : "—"}
+                <td className='px-3 py-3 text-right'>
+                  <div className='flex flex-col items-end gap-1'>
+                    <span className='font-medium text-white tabular-nums'>
+                      {typeof price === "number"
+                        ? price.toLocaleString("en-US", {
+                            style: "currency",
+                            currency: "USD",
+                          })
+                        : "—"}
+                    </span>
+
+                    <span className={`text-xs ${freshnessStyles[freshness]}`}>
+                      {freshnessLabels[freshness]}
+                    </span>
+                  </div>
                 </td>
 
                 <td className='px-3 py-3 text-right tabular-nums'>
