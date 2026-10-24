@@ -4,6 +4,8 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.marketpulse.exception.StockQuoteNotFoundException;
 import com.marketpulse.stocks.client.FinnhubClient;
 import com.marketpulse.stocks.dto.StockQuoteResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -13,6 +15,9 @@ import java.util.Locale;
 
 @Service
 public class StockQuoteService {
+
+  private static final Logger log =
+      LoggerFactory.getLogger(StockQuoteService.class);
 
   private static final Duration CACHE_TTL = Duration.ofSeconds(30);
   private static final long MAX_CACHE_SIZE = 1_000;
@@ -46,7 +51,6 @@ public class StockQuoteService {
     });
   }
 
-
   private Mono<StockQuoteResponse> createCachedQuote(String symbol) {
     return Mono.defer(() -> finnhubClient.getQuote(symbol))
         .map(quote -> {
@@ -75,6 +79,4 @@ public class StockQuoteService {
             () -> Duration.ZERO
         );
   }
-
-
 }

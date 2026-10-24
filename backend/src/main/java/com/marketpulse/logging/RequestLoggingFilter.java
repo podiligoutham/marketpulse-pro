@@ -1,4 +1,4 @@
-package com.marketpulse.config.logging;
+package com.marketpulse.logging;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
